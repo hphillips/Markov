@@ -85,7 +85,8 @@ class Markov(object):
 			return text
 
 	def add(self,words):
-
+		if len(words)==0:
+			return
 		clean_start=self.clean_text(words[0])
 		self.translations.add(clean_start,words[0])
 		self.chains.add("__start__",clean_start)
@@ -155,19 +156,24 @@ if __name__=='__main__':
 		elif args[i]=="-s":
 			separator=args[i+1]
 			i+=1
+		elif args[i]=="-S":
+			separator=""
 		i+=1
 
 	input_set = []
 	if in_file is not None:
 		with open(in_file,'r') as f:
-			input_set = f.readlines()	
+			for line in f.readlines():
+				input_set.append(line.strip())
 	else:
 		for line in sys.stdin:
-			input_set.append(line)
+			input_set.append(line.strip())
 
 	content=[]
 	input_ct=0
 	for line in input_set:
+		if line=="":
+			continue
 		input_ct+=1
 		parts=line.split("__split__")
 		for i in range(0,len(parts)):
@@ -182,7 +188,10 @@ if __name__=='__main__':
 		chain = Markov(chain_length=chain_length,text_type=text_type,training_set=training_set)
 		output_addition=[]
 		for i in range(0,desired_output_ct):
-			output_addition.append(chain.generateText(separator))
+			generated = chain.generateText(separator)
+			while generated in input_set:
+				generated=chain.generateText(separator)
+			output_addition.append(generated)
 		output.append(output_addition)
 	for i in range(0,desired_output_ct):
 		printed = ''
